@@ -6,7 +6,7 @@
 
 **Architecture:** Next.js app with Firebase backend (Firestore + Auth). Frontend-only deployment to Vercel with Firebase handling all persistence and authentication. Data model: each user has exercises stored in Firestore, keyed by date.
 
-**Tech Stack:** Next.js 14+, React, TailwindCSS, Firebase (Firestore + Authentication), Recharts (charts), Vercel (hosting)
+**Tech Stack:** Next.js 14+, React, TailwindCSS, Firebase (Firestore + Authentication), Chart.js (charts), Vercel (hosting)
 
 ---
 
@@ -85,10 +85,10 @@ Select options:
 npm install firebase
 ```
 
-- [ ] **Step 3: Install Recharts for charts**
+- [ ] **Step 3: Install Chart.js and react-chartjs-2 for charts**
 
 ```bash
-npm install recharts
+npm install chart.js react-chartjs-2
 ```
 
 - [ ] **Step 4: Create `.env.local` template**
@@ -1566,7 +1566,18 @@ Create `C:\work\healthy-life\src/components/stats/WeekChart.tsx`:
 
 import { Exercise } from '@/types';
 import { getStartOfWeek, getEndOfWeek, formatDate } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface WeekChartProps {
   exercises: Exercise[];
@@ -1585,7 +1596,7 @@ export default function WeekChart({ exercises }: WeekChartProps) {
 
   // Create data for each day of the week
   const days = ['월', '화', '수', '목', '금', '토', '일'];
-  const data = [];
+  const data: any[] = [];
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart);
@@ -1602,33 +1613,85 @@ export default function WeekChart({ exercises }: WeekChartProps) {
     });
   }
 
+  const chartData = {
+    labels: data.map((d) => d.day),
+    datasets: [
+      {
+        label: '운동 시간 (분)',
+        data: data.map((d) => d.minutes),
+        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        borderWidth: 2,
+        borderRadius: 8,
+        hoverBackgroundColor: 'rgba(34, 197, 94, 1)',
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          font: { size: 12, weight: 500 as const },
+          padding: 15,
+          color: '#374151',
+        },
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          font: { size: 12 },
+          color: '#6B7280',
+        },
+        grid: {
+          color: 'rgba(107, 114, 128, 0.1)',
+        },
+      },
+      x: {
+        ticks: {
+          font: { size: 12, weight: 500 as const },
+          color: '#374151',
+        },
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
+
+  const exerciseDays = new Set(data.filter((d) => d.minutes > 0).map((d) => d.date)).size;
+  const totalMinutes = data.reduce((sum, d) => sum + d.minutes, 0);
+  const avgMinutes = exerciseDays > 0 ? (totalMinutes / exerciseDays).toFixed(1) : '0';
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
-      <h3 className="text-lg font-bold mb-4">📊 주간 통계</h3>
+    <div className="bg-white p-6 rounded-xl shadow-md mb-6">
+      <h3 className="text-xl font-bold mb-4 text-gray-800">📊 주간 통계</h3>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" />
-          <YAxis label={{ value: '운동 시간 (분)', angle: -90, position: 'insideLeft' }} />
-          <Tooltip
-            formatter={(value) => `${value}분`}
-            labelFormatter={(label) => `${label}요일`}
-          />
-          <Bar dataKey="minutes" fill="#22c55e" />
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="mb-6">
+        <Bar data={chartData} options={chartOptions} height={300} />
+      </div>
 
-      <div className="mt-4 space-y-2 text-sm">
-        <p>
-          <span className="font-medium">운동 일수:</span> {new Set(data.filter(d => d.minutes > 0).map(d => d.date)).size}일
-        </p>
-        <p>
-          <span className="font-medium">총 시간:</span> {data.reduce((sum, d) => sum + d.minutes, 0)}분
-        </p>
-        <p>
-          <span className="font-medium">평균 시간:</span> {data.filter(d => d.minutes > 0).length > 0 ? (data.reduce((sum, d) => sum + d.minutes, 0) / new Set(data.filter(d => d.minutes > 0).map(d => d.date)).size).toFixed(1) : 0}분
-        </p>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-green-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600">운동 일수</p>
+          <p className="text-2xl font-bold text-green-600">{exerciseDays}일</p>
+        </div>
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600">총 시간</p>
+          <p className="text-2xl font-bold text-blue-600">{totalMinutes}분</p>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600">평균 시간</p>
+          <p className="text-2xl font-bold text-purple-600">{avgMinutes}분</p>
+        </div>
       </div>
     </div>
   );
@@ -1644,7 +1707,29 @@ Create `C:\work\healthy-life\src/components/stats/MonthChart.tsx`:
 
 import { Exercise } from '@/types';
 import { formatDate, getStartOfMonth, getEndOfMonth } from '@/lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 interface MonthChartProps {
   exercises: Exercise[];
@@ -1662,7 +1747,7 @@ export default function MonthChart({ exercises }: MonthChartProps) {
   });
 
   // Create cumulative data for each day
-  const data = [];
+  const data: any[] = [];
   let cumulativeMinutes = 0;
   const daysInMonth = monthEnd.getDate();
 
@@ -1681,39 +1766,96 @@ export default function MonthChart({ exercises }: MonthChartProps) {
     });
   }
 
+  const chartData = {
+    labels: data.map((d) => `${d.day}일`),
+    datasets: [
+      {
+        label: '누적 운동 시간 (분)',
+        data: data.map((d) => d.cumulative),
+        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3,
+        pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        hoverBackgroundColor: 'rgba(34, 197, 94, 0.8)',
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          font: { size: 12, weight: 500 as const },
+          padding: 15,
+          color: '#374151',
+        },
+      },
+      title: {
+        display: false,
+      },
+      filler: {
+        propagate: true,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          font: { size: 12 },
+          color: '#6B7280',
+        },
+        grid: {
+          color: 'rgba(107, 114, 128, 0.1)',
+        },
+      },
+      x: {
+        ticks: {
+          font: { size: 10 },
+          color: '#6B7280',
+          maxRotation: 45,
+          minRotation: 0,
+        },
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
+
+  const exerciseDays = new Set(monthExercises.map((ex) => ex.date)).size;
+  const totalMinutes = monthExercises.reduce((sum, ex) => sum + ex.duration, 0);
+  const avgMinutes = exerciseDays > 0 ? (totalMinutes / exerciseDays).toFixed(1) : '0';
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm">
-      <h3 className="text-lg font-bold mb-4">📊 월간 통계</h3>
+    <div className="bg-white p-6 rounded-xl shadow-md">
+      <h3 className="text-xl font-bold mb-4 text-gray-800">📊 월간 통계</h3>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" />
-          <YAxis label={{ value: '누적 운동 시간 (분)', angle: -90, position: 'insideLeft' }} />
-          <Tooltip
-            formatter={(value) => `${value}분`}
-            labelFormatter={(label) => `${label}일`}
-          />
-          <Line
-            type="monotone"
-            dataKey="cumulative"
-            stroke="#22c55e"
-            dot={false}
-            strokeWidth={2}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="mb-6">
+        <Line data={chartData} options={chartOptions} height={350} />
+      </div>
 
-      <div className="mt-4 space-y-2 text-sm">
-        <p>
-          <span className="font-medium">운동 일수:</span> {new Set(monthExercises.map(ex => ex.date)).size}일
-        </p>
-        <p>
-          <span className="font-medium">총 시간:</span> {monthExercises.reduce((sum, ex) => sum + ex.duration, 0)}분
-        </p>
-        <p>
-          <span className="font-medium">평균 시간:</span> {new Set(monthExercises.map(ex => ex.date)).size > 0 ? (monthExercises.reduce((sum, ex) => sum + ex.duration, 0) / new Set(monthExercises.map(ex => ex.date)).size).toFixed(1) : 0}분
-        </p>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-green-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600">운동 일수</p>
+          <p className="text-2xl font-bold text-green-600">{exerciseDays}일</p>
+        </div>
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600">총 시간</p>
+          <p className="text-2xl font-bold text-blue-600">{totalMinutes}분</p>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-600">평균 시간</p>
+          <p className="text-2xl font-bold text-purple-600">{avgMinutes}분</p>
+        </div>
       </div>
     </div>
   );
