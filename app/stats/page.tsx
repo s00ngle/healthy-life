@@ -13,11 +13,13 @@ export default function StatsPage() {
   const { user } = useAuth();
   const { exercises, fetchByDateRange, loading } = useExercises();
 
+  const userId = user?.uid;
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const now = new Date();
     fetchByDateRange(formatDate(getStartOfMonth(now)), formatDate(getEndOfMonth(now)));
-  }, [user, fetchByDateRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   return (
     <ProtectedRoute>

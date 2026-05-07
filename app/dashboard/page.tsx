@@ -16,12 +16,14 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const userId = user?.uid;
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const start = formatDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1));
     const end = formatDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0));
     fetchByDateRange(start, end);
-  }, [user, currentMonth, fetchByDateRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, currentMonth]);
 
   const weekExercises = exercises.filter((ex) => {
     const now = new Date();
