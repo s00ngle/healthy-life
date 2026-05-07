@@ -28,7 +28,7 @@ export default function WeekChart({ exercises }: WeekChartProps) {
     return ex.date >= formatDate(weekStart) && ex.date <= formatDate(weekEnd);
   });
 
-  const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
+  const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
   const minutesByDay = dayLabels.map((_, i) => {
     const date = new Date(weekStart);
     date.setDate(date.getDate() + i);

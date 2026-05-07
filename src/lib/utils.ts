@@ -16,9 +16,7 @@ export function getEndOfMonth(date: Date): Date {
 
 export function getStartOfWeek(date: Date): Date {
   const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
-  d.setDate(diff);
+  d.setDate(d.getDate() - d.getDay()); // Sunday
   d.setHours(0, 0, 0, 0);
   return d;
 }
@@ -26,7 +24,7 @@ export function getStartOfWeek(date: Date): Date {
 export function getEndOfWeek(date: Date): Date {
   const start = getStartOfWeek(date);
   const end = new Date(start);
-  end.setDate(end.getDate() + 6);
+  end.setDate(end.getDate() + 6); // Saturday
   end.setHours(23, 59, 59, 999);
   return end;
 }

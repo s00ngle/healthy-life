@@ -40,18 +40,15 @@ export default function MonthChart({ exercises }: MonthChartProps) {
   });
 
   const daysInMonth = monthEnd.getDate();
-  let cumulative = 0;
-  const cumulativeData = Array.from({ length: daysInMonth }, (_, i) => {
+  const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
     const date = new Date(now.getFullYear(), now.getMonth(), i + 1);
     const dateStr = formatDate(date);
-    const dayMinutes = monthExercises
+    return monthExercises
       .filter((ex) => ex.date === dateStr)
       .reduce((sum, ex) => sum + ex.duration, 0);
-    cumulative += dayMinutes;
-    return cumulative;
   });
 
-  const labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}일`);
+  const labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
 
   const exerciseDays = new Set(monthExercises.map((ex) => ex.date)).size;
   const totalMinutes = monthExercises.reduce((sum, ex) => sum + ex.duration, 0);
@@ -61,12 +58,12 @@ export default function MonthChart({ exercises }: MonthChartProps) {
     labels,
     datasets: [
       {
-        label: '누적 운동 시간 (분)',
-        data: cumulativeData,
+        label: '운동 시간 (분)',
+        data: dailyData,
         borderColor: 'rgba(13, 148, 136, 1)',
-        backgroundColor: 'rgba(13, 148, 136, 0.1)',
+        backgroundColor: 'rgba(13, 148, 136, 0.15)',
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
         borderWidth: 2.5,
         pointBackgroundColor: 'rgba(13, 148, 136, 1)',
         pointBorderColor: '#fff',
@@ -103,7 +100,7 @@ export default function MonthChart({ exercises }: MonthChartProps) {
 
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-      <h3 className="text-base font-bold text-gray-900 mb-4">📈 월간 통계</h3>
+      <h3 className="text-base font-bold text-gray-900 mb-4">📊 월간 통계</h3>
 
       <div className="h-52 mb-5">
         <Line data={chartData} options={chartOptions} />
