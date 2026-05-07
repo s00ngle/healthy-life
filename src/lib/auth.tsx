@@ -25,7 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * AuthProvider component that manages user authentication state
  * Sets up Firebase auth listener and provides auth methods to children
  */
-export function AuthProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
+export function AuthProvider({ children }: { children: React.ReactNode }): React.ReactNode {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
