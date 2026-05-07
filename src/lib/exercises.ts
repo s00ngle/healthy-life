@@ -55,23 +55,23 @@ export async function getExercisesByDateRange(
 ): Promise<Exercise[]> {
   const q = query(
     collection(db, EXERCISES_COLLECTION),
-    where('userId', '==', userId),
-    where('date', '>=', startDate),
-    where('date', '<=', endDate)
+    where('userId', '==', userId)
   );
 
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      date: data.date,
-      type: data.type,
-      duration: data.duration,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-    };
-  });
+  return snapshot.docs
+    .map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        date: data.date,
+        type: data.type,
+        duration: data.duration,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+    })
+    .filter((ex) => ex.date >= startDate && ex.date <= endDate);
 }
 
 export function calculateWeekStats(exercises: Exercise[]) {
